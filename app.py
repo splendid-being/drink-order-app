@@ -139,12 +139,39 @@ HTML_TEMPLATE = """
             {% endif %}
         </div>
     </div>
-    <div style="text-align: center; margin-top: 40px;">
-        <img src="{{ url_for('static', filename='menu.jpg') }}"
-             alt="메뉴판"
-             style="width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-        <p style="color: #555; margin-top: 10px;">※ 메뉴판을 참고해주세요 ☕</p>
-    </div>
+    <!-- 메뉴판 이미지 클릭 시 확대 -->
+<div style="text-align: center; margin-top: 40px;">
+    <img src="{{ url_for('static', filename='menu.jpg') }}"
+         alt="메뉴판"
+         id="menu-img"
+         style="width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;">
+    <p style="color: #555; margin-top: 10px;">※ 메뉴판을 클릭하면 확대됩니다 ☕</p>
+</div>
+
+<!-- 모달 창 -->
+<div id="img-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+     background-color: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
+    <img src="{{ url_for('static', filename='menu.jpg') }}"
+         alt="확대 메뉴판"
+         style="max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+</div>
+
+<!-- JavaScript: 클릭으로 열고 닫기 -->
+<script>
+    const img = document.getElementById('menu-img');
+    const modal = document.getElementById('img-modal');
+
+    img.addEventListener('click', () => {
+        modal.style.display = 'flex';
+    });
+
+    modal.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+</script>
+
+
+    
 </body>
 </html>
 """
