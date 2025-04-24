@@ -1,14 +1,16 @@
 from flask import Flask, request, redirect, url_for, render_template_string
 from collections import Counter
+from datetime import datetime
 
 app = Flask(__name__)
 orders = []
+last_reset_date = None  # 오후 6시 이후 1일 1회 초기화
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html lang="ko">
+<html lang=\"ko\">
 <head>
-    <meta charset="UTF-8">
+    <meta charset=\"UTF-8\">
     <title>정보시스템실 음료 선택</title>
     <style>
         body {
@@ -43,6 +45,9 @@ HTML_TEMPLATE = """
             border-radius: 6px;
             font-size: 16px;
         }
+        input[name=\"name\"] { maxlength: 10; }
+        input[name=\"drink\"] { maxlength: 20; }
+
         .temp-buttons {
             display: flex;
             gap: 10px;
@@ -94,39 +99,34 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <h2>음료 주문</h2>
-    <div class="container">
-
-        <!-- 왼쪽: 입력 및 상세 리스트 -->
-        <div class="box">
-            <form method="post">
-                <input type="text" name="name" placeholder="이름 입력" required>
-                <input type="text" name="drink" placeholder="음료 입력" required>
-                <div class="temp-buttons">
-                    <button name="temperature" value="아이스" class="ice">🧊 아이스</button>
-                    <button name="temperature" value="따뜻한" class="hot">🔥 핫</button>
+    <div class=\"container\">
+        <div class=\"box\">
+            <form method=\"post\">
+                <input type=\"text\" name=\"name\" placeholder=\"이름 입력\" maxlength=\"10\" required>
+                <input type=\"text\" name=\"drink\" placeholder=\"음료 입력\" maxlength=\"10\" required>
+                <div class=\"temp-buttons\">
+                    <button name="temperature" value="아이스" class="ice">&#x1F9CA; 아이스</button>
+                    <button name="temperature" value="따뜻한" class="hot">&#x1F525; 핫</button>
                 </div>
             </form>
-
             {% if orders %}
             <h3>주문 현황</h3>
             <ul>
                 {% for idx, order in enumerate(orders) %}
                 <li>
-                    <div class="drink-info">
+                    <div class=\"drink-info\">
                         {{ idx+1 }}. <strong>{{ order['name'] }}</strong> → {{ order['temperature'] }} {{ order['drink'] }}
                     </div>
-                    <form method="post" action="/delete" class="delete-form">
-                        <input type="hidden" name="index" value="{{ idx }}">
-                        <button class="delete-button">삭제</button>
+                    <form method=\"post\" action=\"/delete\" class=\"delete-form\">
+                        <input type=\"hidden\" name=\"index\" value=\"{{ idx }}\">
+                        <button class=\"delete-button\">삭제</button>
                     </form>
                 </li>
                 {% endfor %}
             </ul>
             {% endif %}
         </div>
-
-        <!-- 오른쪽: 요약 리스트 -->
-        <div class="box">
+        <div class=\"box\">
             <h3>주문판</h3>
             {% if summary %}
                 <ul>
@@ -140,55 +140,80 @@ HTML_TEMPLATE = """
         </div>
     </div>
     <!-- 메뉴판 이미지 클릭 시 확대 -->
-<div style="text-align: center; margin-top: 40px;">
-    <img src="{{ url_for('static', filename='menu.jpg') }}"
-         alt="메뉴판"
-         id="menu-img"
-         style="width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;">
-    <p style="color: #555; margin-top: 10px;">※ 메뉴판을 클릭하면 확대됩니다 ☕</p>
-</div>
+    <div style=\"text-align: center; margin-top: 40px;\">
+        <img src=\"{{ url_for('static', filename='menu.jpg') }}\"
+             alt=\"메뉴판\"
+             id=\"menu-img\"
+             style=\"width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;\">
+        <p style=\"color: #555; margin-top: 10px;\">※ 메뉴판을 클릭하면 확대됩니다 ☕</p>
+    </div>
+    <div id=\"img-modal\" style=\"display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+         background-color: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;\">
+        <img src=\"{{ url_for('static', filename='menu.jpg') }}\"
+             alt=\"확대 메뉴판\"
+             style=\"max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);\">
+    </div>
+    <script>
+        const img = document.getElementById('menu-img');
+        const modal = document.getElementById('img-modal');
+        img.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+        modal.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
 
-<!-- 모달 창 -->
-<div id="img-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-     background-color: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
-    <img src="{{ url_for('static', filename='menu.jpg') }}"
-         alt="확대 메뉴판"
-         style="max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
-</div>
-
-<!-- JavaScript: 클릭으로 열고 닫기 -->
-<script>
-    const img = document.getElementById('menu-img');
-    const modal = document.getElementById('img-modal');
-
-    img.addEventListener('click', () => {
-        modal.style.display = 'flex';
-    });
-
-    modal.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-</script>
-
-
-    
+        // 쓰로틀링 함수
+        function throttle(func, limit) {
+            let lastCalled = 0;
+            return function () {
+                const now = Date.now();
+                if (now - lastCalled >= limit) {
+                    lastCalled = now;
+                    func.apply(this, arguments);
+                }
+            };
+        }
+        const buttons = document.querySelectorAll('.temp-buttons button');
+        const throttledSubmit = throttle(function (e) {
+            e.target.closest('form').submit();
+        }, 1000);
+        buttons.forEach(button => {
+            button.addEventListener('click', throttledSubmit);
+        });
+    </script>
 </body>
 </html>
 """
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global orders, last_reset_date
+
+    now = datetime.now()
+    if now.hour >= 18:
+        today_str = now.strftime("%Y-%m-%d")
+        if last_reset_date != today_str:
+            orders = []
+            last_reset_date = today_str
+
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         drink = request.form.get('drink', '').strip()
         temperature = request.form.get('temperature', '').strip()
-        if name and drink and temperature:
-            orders.append({
-                'name': name,
-                'drink': drink,
-                'temperature': temperature
-            })
-            return redirect(url_for('index'))
+
+        if not name or not drink:
+            return "이름과 음료는 필수입니다.", 400
+
+        if temperature not in ['아이스', '따뜻한']:
+            return "온도 선택이 올바르지 않습니다. (아이스 / 따뜻한)", 422
+
+        orders.append({
+            'name': name,
+            'drink': drink,
+            'temperature': temperature
+        })
+        return redirect(url_for('index'))
 
     summary_counter = Counter(f"{order['temperature']} {order['drink']}" for order in orders)
     return render_template_string(
