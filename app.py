@@ -139,6 +139,12 @@ HTML_TEMPLATE = """
             {% endif %}
         </div>
     </div>
+    <div style="text-align: center; margin-top: 40px;">
+        <img src="{{ url_for('static', filename='menu.jpg') }}"
+             alt="메뉴판"
+             style="width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <p style="color: #555; margin-top: 10px;">※ 메뉴판을 참고해주세요 ☕</p>
+    </div>
 </body>
 </html>
 """
