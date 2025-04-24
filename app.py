@@ -105,11 +105,11 @@ HTML_TEMPLATE = """
         <div class=\"box\">
             <form method=\"post\">
                 <input type=\"text\" name=\"name\" placeholder=\"이름 입력\" maxlength=\"10\" required>
-                <input type=\"text\" name=\"drink\" placeholder=\"음료 입력\" maxlength=\"10\" required>
+                <input type=\"text\" name=\"drink\" placeholder=\"음료 입력\" maxlength=\"20\" required>
                 <div id=\"error-msg\" class=\"error-msg\">이름과 음료를 모두 입력해주세요.</div>
                 <div class=\"temp-buttons\">
-                    <button name=\"temperature\" value=\"아이스\" class=\"ice\">&#x1F9CA; 아이스</button>
-                    <button name=\"temperature\" value=\"따뜻한\" class=\"hot\">&#x1F525; 핫</button>
+                    <button type=\"button\" name=\"temperature\" value=\"아이스\" class=\"ice\">&#x1F9CA; 아이스</button>
+                    <button type=\"button\" name=\"temperature\" value=\"따뜻한\" class=\"hot\">&#x1F525; 핫</button>
                 </div>
             </form>
             {% if orders %}
@@ -159,12 +159,13 @@ HTML_TEMPLATE = """
         modal.addEventListener('click', () => modal.style.display = 'none');
 
         function throttle(func, limit) {
-            let lastCalled = 0;
-            return function () {
+            let lastCall = 0;
+            return function (e) {
+                e.preventDefault(); // 기본 제출 막기
                 const now = Date.now();
-                if (now - lastCalled >= limit) {
-                    lastCalled = now;
-                    func.apply(this, arguments);
+                if (now - lastCall >= limit) {
+                    lastCall = now;
+                    func.call(this, e);
                 }
             };
         }
@@ -182,6 +183,15 @@ HTML_TEMPLATE = """
             } else {
                 errorMsg.style.display = "none";
             }
+
+            const temperature = e.target.value;
+
+            // 동적으로 hidden input 생성 후 폼 제출
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'temperature';
+            hidden.value = temperature;
+            form.appendChild(hidden);
 
             form.submit();
         }, 1000);
