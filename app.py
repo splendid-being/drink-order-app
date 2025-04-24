@@ -45,9 +45,11 @@ HTML_TEMPLATE = """
             border-radius: 6px;
             font-size: 16px;
         }
-        input[name=\"name\"] { maxlength: 10; }
-        input[name=\"drink\"] { maxlength: 20; }
-
+        .error-msg {
+            color: red;
+            font-size: 14px;
+            display: none;
+        }
         .temp-buttons {
             display: flex;
             gap: 10px;
@@ -104,9 +106,10 @@ HTML_TEMPLATE = """
             <form method=\"post\">
                 <input type=\"text\" name=\"name\" placeholder=\"이름 입력\" maxlength=\"10\" required>
                 <input type=\"text\" name=\"drink\" placeholder=\"음료 입력\" maxlength=\"10\" required>
+                <div id=\"error-msg\" class=\"error-msg\">이름과 음료를 모두 입력해주세요.</div>
                 <div class=\"temp-buttons\">
-                    <button name="temperature" value="아이스" class="ice">&#x1F9CA; 아이스</button>
-                    <button name="temperature" value="따뜻한" class="hot">&#x1F525; 핫</button>
+                    <button name=\"temperature\" value=\"아이스\" class=\"ice\">&#x1F9CA; 아이스</button>
+                    <button name=\"temperature\" value=\"따뜻한\" class=\"hot\">&#x1F525; 핫</button>
                 </div>
             </form>
             {% if orders %}
@@ -139,7 +142,6 @@ HTML_TEMPLATE = """
             {% endif %}
         </div>
     </div>
-    <!-- 메뉴판 이미지 클릭 시 확대 -->
     <div style=\"text-align: center; margin-top: 40px;\">
         <img src=\"{{ url_for('static', filename='menu.jpg') }}\"
              alt=\"메뉴판\"
@@ -147,23 +149,15 @@ HTML_TEMPLATE = """
              style=\"width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;\">
         <p style=\"color: #555; margin-top: 10px;\">※ 메뉴판을 클릭하면 확대됩니다 ☕</p>
     </div>
-    <div id=\"img-modal\" style=\"display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-         background-color: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;\">
-        <img src=\"{{ url_for('static', filename='menu.jpg') }}\"
-             alt=\"확대 메뉴판\"
-             style=\"max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);\">
+    <div id=\"img-modal\" style=\"display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;\">
+        <img src=\"{{ url_for('static', filename='menu.jpg') }}\" alt=\"확대 메뉴판\" style=\"max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);\">
     </div>
     <script>
         const img = document.getElementById('menu-img');
         const modal = document.getElementById('img-modal');
-        img.addEventListener('click', () => {
-            modal.style.display = 'flex';
-        });
-        modal.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
+        img.addEventListener('click', () => modal.style.display = 'flex');
+        modal.addEventListener('click', () => modal.style.display = 'none');
 
-        // 쓰로틀링 함수
         function throttle(func, limit) {
             let lastCalled = 0;
             return function () {
@@ -174,10 +168,24 @@ HTML_TEMPLATE = """
                 }
             };
         }
+
         const buttons = document.querySelectorAll('.temp-buttons button');
         const throttledSubmit = throttle(function (e) {
-            e.target.closest('form').submit();
+            const form = e.target.closest('form');
+            const name = form.querySelector('input[name="name"]').value.trim();
+            const drink = form.querySelector('input[name="drink"]').value.trim();
+            const errorMsg = document.getElementById("error-msg");
+
+            if (!name || !drink) {
+                errorMsg.style.display = "block";
+                return;
+            } else {
+                errorMsg.style.display = "none";
+            }
+
+            form.submit();
         }, 1000);
+
         buttons.forEach(button => {
             button.addEventListener('click', throttledSubmit);
         });
