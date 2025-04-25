@@ -1,10 +1,12 @@
 from flask import Flask, request, redirect, url_for, render_template_string
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
 orders = []
 last_reset_date = None  # 오후 6시 이후 1일 1회 초기화
+
+KST = timezone(timedelta(hours=9))
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -144,24 +146,39 @@ HTML_TEMPLATE = """
     </div>
     <div style=\"text-align: center; margin-top: 40px;\">
         <img src=\"{{ url_for('static', filename='menu.jpg') }}\"
-             alt=\"메뉴판\"
+             alt=\"지하1층 메뉴판\"
              id=\"menu-img\"
              style=\"width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;\">
-        <p style=\"color: #555; margin-top: 10px;\">※ 메뉴판을 클릭하면 확대됩니다 ☕</p>
+            </div>
+    <div style=\"text-align: center; margin-top: 20px;\">
+        <img src=\"{{ url_for('static', filename='2F_menu.jpg') }}\"
+             alt=\"2층 메뉴판\"
+             id=\"menu2f-img\"
+             style=\"width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;\">
+        <p style=\"color: #555; margin-top: 10px;\">※ 메뉴판을 클릭하면 확대됩니다 🧋</p>
     </div>
     <div id=\"img-modal\" style=\"display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;\">
-        <img src=\"{{ url_for('static', filename='menu.jpg') }}\" alt=\"확대 메뉴판\" style=\"max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);\">
+        <img id=\"modal-img\" src=\"\" alt=\"확대 메뉴판\" style=\"max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);\">
     </div>
     <script>
         const img = document.getElementById('menu-img');
+        const img2f = document.getElementById('menu2f-img');
         const modal = document.getElementById('img-modal');
-        img.addEventListener('click', () => modal.style.display = 'flex');
+        const modalImg = document.getElementById('modal-img');
+
+        function showModal(targetImg) {
+            modalImg.src = targetImg.src;
+            modal.style.display = 'flex';
+        }
+
+        img.addEventListener('click', () => showModal(img));
+        img2f.addEventListener('click', () => showModal(img2f));
         modal.addEventListener('click', () => modal.style.display = 'none');
 
         function throttle(func, limit) {
             let lastCall = 0;
             return function (e) {
-                e.preventDefault(); // 기본 제출 막기
+                e.preventDefault();
                 const now = Date.now();
                 if (now - lastCall >= limit) {
                     lastCall = now;
@@ -185,8 +202,6 @@ HTML_TEMPLATE = """
             }
 
             const temperature = e.target.value;
-
-            // 동적으로 hidden input 생성 후 폼 제출
             const hidden = document.createElement('input');
             hidden.type = 'hidden';
             hidden.name = 'temperature';
@@ -208,12 +223,15 @@ HTML_TEMPLATE = """
 def index():
     global orders, last_reset_date
 
-    now = datetime.now()
+    now = datetime.now(KST)
+    today_str = now.strftime("%Y-%m-%d")
+    print(f"[DEBUG] 현재 시간: {now}, 기준 날짜: {today_str}, last_reset_date: {last_reset_date}")
+
     if now.hour >= 18:
-        today_str = now.strftime("%Y-%m-%d")
         if last_reset_date != today_str:
             orders = []
             last_reset_date = today_str
+            print(f"[RESET] 주문 내역 초기화됨 at {now}")
 
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
