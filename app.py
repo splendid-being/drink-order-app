@@ -50,15 +50,43 @@ HTML_TEMPLATE = """
         .delete-button:hover { background: #999; }
         .ice-border { border-left: 6px solid #5c9cff; }
         .hot-border { border-left: 6px solid #ff5c5c; }
+      
+       
+
+        #suggestions {
+            width: 100%;
+            left: 0;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-height: 160px;
+            overflow-y: auto;
+        }
+
+        #suggestions div {
+            padding: 10px 12px;
+            cursor: pointer;
+        }
+
+        #suggestions div:last-child {
+            border-bottom: none;
+        }
+
+        #suggestions div:hover {
+            background-color: #f1f1f1;
+        }
+
     </style>
 </head>
 <body>
     <h1>&#x1F964; 음료 주문</h1>
     <div class="container">
         <div class="box">
-            <form method="post">
+            <form method="post" style="position: relative;">
                 <input type="text" name="name" placeholder="이름 입력" maxlength="10" required>
                 <input type="text" name="drink" id="drink-input" placeholder="음료 입력" maxlength="20" required>
+                <div id="suggestions"></div>
                 <div id="bean-section" style="display: none;">
                     <label for="bean">&#x1F331; 원두 선택</label>
                     <select name="bean" id="bean">
@@ -112,14 +140,20 @@ HTML_TEMPLATE = """
     <!-- 메뉴판 이미지 -->
     <div style="text-align: center; margin-top: 40px;">
         <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <div>
+            <p style="margin-bottom: 8px; color: #333;">지하 1층 메뉴판</p>
             <img src="{{ url_for('static', filename='menu.jpg') }}"
                 alt="지하1층 메뉴판"
                 class="menu-img"
                 style="width: 300px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;">
+        </div>
+        <div>
+            <p style="margin-bottom: 8px; color: #333;">2층 메뉴판</p>
             <img src="{{ url_for('static', filename='2F_menu.jpg') }}"
                 alt="2층 메뉴판"
                 class="menu-img"
                 style="width: 300px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;">
+        </div>
         </div>
         <p style="color: #555; margin-top: 10px;">※ 메뉴판을 클릭하면 확대됩니다</p>
     </div>
@@ -133,21 +167,62 @@ HTML_TEMPLATE = """
 
     <script>
         const drinkInput = document.getElementById('drink-input');
+        const suggestions = document.getElementById('suggestions');
         const beanSection = document.getElementById('bean-section');
         const beanError = document.getElementById('bean-error');
         const beanSelect = document.getElementById('bean');
+        const drinkList = [
+    '아메리카노', '카페 라떼', '바닐라빈 라떼','헤이즐넛 라떼','돌체 라떼',
+    '카라멜 마끼아또','더블초콜릿 모카', '콜드브루', '콜드 브루 라떼',
+    '파파야 블렌딩', '오렌지베리 블렌딩', '레몬그라스 블렌딩', '스윗루이보스 블렌딩',
+    '오미자 차', '매실 차','자몽 차','레몬 차','배.도라지.대추 차',
+    '패션후르츠 칸티노', '딸기 칸티노', '플레인 요거트 칸티노','망고 요거트 칸티노',
+    '오미자 에이드', '매실 에이드', '자몽 에이드', '핑크레몬 에이드','망고패션후르츠 에이드','딸기 에이드',
+    '초콜릿', '단팥 라떼','토피넛 라떼','칸틴 밀크티','쑥 라떼', '딸기듬뿍 우유','제주말차 라떼'
+];
 
-        drinkInput.addEventListener('input', () => {
-            const value = drinkInput.value.toLowerCase().replace(/\\s+/g, '');
-            const isCoffee = value.includes('커피') || value.includes('라떼') || value.includes('아메리카노') || value.includes('모카');
-            if (isCoffee) {
-                beanSection.style.display = 'block';
-            } else {
-                beanSection.style.display = 'none';
-                beanError.style.display = 'none';
-                beanSelect.value = '';
+
+drinkInput.addEventListener('input', () => {
+    const raw = drinkInput.value;
+    const normalized = raw.toLowerCase().replace(/\s+/g, '');
+    suggestions.innerHTML = "";
+
+    // 자동완성 추천 표시
+    if (normalized.length > 0) {
+        const matched = drinkList.filter(item => item.toLowerCase().includes(normalized));
+        matched.slice(0, 5).forEach(match => {
+            const div = document.createElement('div');
+            div.textContent = match;
+
+            div.addEventListener('click', () => {
+                drinkInput.value = match;
+                suggestions.innerHTML = "";
+                drinkInput.dispatchEvent(new Event('input')); // 원두 판단용
+            });
+
+            suggestions.appendChild(div);
+        });
+    }
+
+        // 원두 선택 조건 확인
+        const isCoffee = ['마끼아또', '라떼', '아메리카노', '모카'].some(word => normalized.includes(word));
+        if (isCoffee) {
+            beanSection.style.display = 'block';
+        } else {
+            beanSection.style.display = 'none';
+            beanError.style.display = 'none';
+            beanSelect.value = '';
+        }
+    });
+
+    
+        document.addEventListener('click', (e) => {
+            if (!suggestions.contains(e.target) && e.target !== drinkInput) {
+                suggestions.innerHTML = "";
             }
         });
+
+
 
         function throttle(func, limit) {
             let lastCall = 0;
