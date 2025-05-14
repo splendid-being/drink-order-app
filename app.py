@@ -77,6 +77,10 @@ HTML_TEMPLATE = """
             background-color: #f1f1f1;
         }
 
+        .autocomplete-item.active {
+            background-color: #e0f4ff;
+        }
+
     </style>
 </head>
 <body>
@@ -86,6 +90,9 @@ HTML_TEMPLATE = """
             <form method="post" style="position: relative;">
                 <input type="text" name="name" placeholder="이름 입력" maxlength="10" required>
                 <input type="text" name="drink" id="drink-input" placeholder="음료 입력" maxlength="20" required>
+                <small style="color: #777; font-size: 13px; margin-top: -5px;">
+                    &#x2328; 이제 방향키와 Enter로 자동완성 항목을 선택할 수 있어요!
+                </small>
                 <div id="suggestions"></div>
                 <div id="bean-section" style="display: none;">
                     <label for="bean">&#x1F331; 원두 선택</label>
@@ -181,11 +188,13 @@ HTML_TEMPLATE = """
     '초콜릿', '단팥 라떼','토피넛 라떼','칸틴 밀크티','쑥 라떼', '딸기듬뿍 우유','제주말차 라떼'
 ];
 
+let currentFocus = -1;
 
 drinkInput.addEventListener('input', () => {
     const raw = drinkInput.value;
     const normalized = raw.toLowerCase().replace(/\s+/g, '');
     suggestions.innerHTML = "";
+    currentFocus = -1;
 
     // 자동완성 추천 표시
     if (normalized.length > 0) {
@@ -194,10 +203,15 @@ drinkInput.addEventListener('input', () => {
             const div = document.createElement('div');
             div.textContent = match;
 
-            div.addEventListener('click', () => {
+
+
+            div.tabIndex = -1;
+            div.classList.add('autocomplete-item');
+            div.addEventListener('mousedown', (e) => {
+                e.preventDefault();
                 drinkInput.value = match;
                 suggestions.innerHTML = "";
-                drinkInput.dispatchEvent(new Event('input')); // 원두 판단용
+                drinkInput.dispatchEvent(new Event('input'));
             });
 
             suggestions.appendChild(div);
@@ -205,7 +219,13 @@ drinkInput.addEventListener('input', () => {
     }
 
         // 원두 선택 조건 확인
-        const isCoffee = ['마끼아또', '라떼', '아메리카노', '모카'].some(word => normalized.includes(word));
+        const coffeeDrinks = [
+            '아메리카노', '카페 라떼', '바닐라빈 라떼', '헤이즐넛 라떼',
+            '돌체 라떼', '카라멜 마끼아또', '더블초콜릿 모카'
+        ];
+
+        const isCoffee = coffeeDrinks.some(name => normalized.includes(name.replace(/\s+/g, '').toLowerCase()));
+
         if (isCoffee) {
             beanSection.style.display = 'block';
         } else {
@@ -214,6 +234,37 @@ drinkInput.addEventListener('input', () => {
             beanSelect.value = '';
         }
     });
+
+    drinkInput.addEventListener('keydown', (e) => {
+    const items = suggestions.querySelectorAll('div');
+    if (e.key === 'ArrowDown') {
+        currentFocus++;
+        if (currentFocus >= items.length) currentFocus = 0;
+        setActive(items);
+        e.preventDefault();
+    } else if (e.key === 'ArrowUp') {
+        currentFocus--;
+        if (currentFocus < 0) currentFocus = items.length - 1;
+        setActive(items);
+        e.preventDefault();
+    } else if (e.key === 'Enter') {
+        if (currentFocus > -1 && items[currentFocus]) {
+            items[currentFocus].dispatchEvent(new Event('mousedown'));
+            e.preventDefault();
+        }
+    } else if (e.key === 'Escape') {
+        suggestions.innerHTML = "";
+    }
+    });
+
+    function setActive(items) {
+    if (!items || items.length === 0) return;
+    items.forEach(item => item.classList.remove('active'));
+    if (currentFocus >= 0 && currentFocus < items.length) {
+        items[currentFocus].classList.add('active');
+        items[currentFocus].scrollIntoView({ block: 'nearest' });
+    }
+}
 
     
         document.addEventListener('click', (e) => {
