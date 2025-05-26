@@ -156,7 +156,7 @@ HTML_TEMPLATE = """
         </div>
         <div>
             <p style="margin-bottom: 8px; color: #333;">2층 메뉴판</p>
-            <img src="{{ url_for('static', filename='2F_menu.jpg') }}"
+            <img src="{{ url_for('static', filename='2F_menu.jpeg') }}"
                 alt="2층 메뉴판"
                 class="menu-img"
                 style="width: 300px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;">
