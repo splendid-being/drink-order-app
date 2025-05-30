@@ -169,7 +169,8 @@
                 e.preventDefault();
             } else if (e.key === 'Enter') {
                 if (currentFocus > -1 && items[currentFocus]) {
-                    items[currentFocus].dispatchEvent(new Event('mousedown'));
+                    drinkInput.value = items[currentFocus].textContent;
+                    suggestions.innerHTML = "";
                     e.preventDefault();
                 }
             } else if (e.key === 'Escape') {
