@@ -155,34 +155,39 @@ li {
 
 .cafe-select {
     display: flex;
-    gap: 16px;
-    margin-bottom: 20px;
     justify-content: center;
     flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 15px;
 }
 
 .cafe-option {
     display: inline-block;
-    padding: 14px 24px;
-    border: 2px solid #ddd;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 600;
-    background: #f9f9f9;
-    transition: all 0.3s ease;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 2px solid #ccc;
+    background-color: #f8f8f8;
     font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+    text-align: center;
 }
 
-input[type="radio"] {
+.cafe-option:hover {
+    background-color: #e0e0e0;
+}
+
+input[name="location"] {
     display: none;
 }
 
-input[type="radio"]:checked+.cafe-option {
-    border-color: #5c9cff;
-    background-color: #eaf3ff;
-    color: #0051a8;
-    box-shadow: 0 0 0 3px rgba(92, 156, 255, 0.2);
+input[name="location"]:checked+.cafe-option {
+    border-color: #1e90ff;
+    background-color: #dceeff;
+    font-weight: bold;
 }
+
 
 #suggestions {
     width: 100%;
