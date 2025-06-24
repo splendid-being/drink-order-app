@@ -1,0 +1,8 @@
+# Python 가상환경 폴더
+venv/
+
+# 편집기 관련
+.idea/
+
+# Visual Studio 환경 폴더
+.vs/

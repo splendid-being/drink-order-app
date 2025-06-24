@@ -4,12 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>&#x1F964; 음료 주문</title>
+    <title>음료 주문</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
-    <h1>&#x1F964; 음료 주문</h1>
+<div style="text-align: center; margin-top: 10px;">
+    <button onclick="toggleNews()" style="background: none; border: none; color: #1e90ff; font-size: 14px; cursor: pointer;">
+        &#x1F4E2; 소식 보기
+    </button>
+    <p id="news-msg" style="display: none; font-size: 16px; color: #e74c3c; font-weight: bold; margin-top: 8px;">
+        &#x1F389; 토익 850점 커트라인 넘.었.어.요 &#x1F389;
+    </p>
+</div>
+    <h1>음료 주문</h1>
     <div class="container">
         <div class="box">
             <form method="post" style="position: relative;">
@@ -73,6 +80,7 @@
             <p>주문이 아직 없습니다.</p>
             {% endif %}
         </div>
+
     </div>
 
     <!-- 메뉴판 이미지 -->
@@ -358,6 +366,12 @@
         document.getElementById('img-modal').addEventListener('click', () => {
             document.getElementById('img-modal').style.display = 'none';
         });
+
+        function toggleNews() {
+            const msg = document.getElementById('news-msg');
+            msg.style.display = (msg.style.display === 'none') ? 'block' : 'none';
+        }
+
     </script>
 </body>
 
