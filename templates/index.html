@@ -112,81 +112,54 @@
         const beanError = document.getElementById('bean-error');
         const beanSelect = document.getElementById('bean');
 
+        // 백엔드에서 가져온 데이터를 저장할 변수
         let drinkList = [];
         let coffeeDrinks = [];
 
-        const menuMap = {
-            B1: {
-                drinks: ['아메리카노', '카페 라떼', '바닐라빈 라떼', '헤이즐넛 라떼', '돌체 라떼',
-                    '카라멜 마끼아또', '더블초콜릿 모카', '콜드브루', '콜드 브루 라떼',
-                    '파파야 블렌딩', '오렌지베리 블렌딩', '레몬그라스 블렌딩', '스윗루이보스 블렌딩',
-                    '오미자 차', '매실 차', '자몽 차', '레몬 차', '배.도라지.대추 차',
-                    '패션후르츠 칸티노', '딸기 칸티노', '플레인 요거트 칸티노', '망고 요거트 칸티노',
-                    '오미자 에이드', '매실 에이드', '자몽 에이드', '핑크레몬 에이드', '망고패션후르츠 에이드', '딸기 에이드',
-                    '초콜릿', '단팥 라떼', '토피넛 라떼', '칸틴 밀크티', '쑥 라떼', '딸기듬뿍 우유', '제주말차 라떼'
-                ],
-                coffeeDrinks: ['아메리카노', '카페 라떼', '바닐라빈 라떼', '헤이즐넛 라떼',
-                    '돌체 라떼', '카라멜 마끼아또', '더블초콜릿 모카'],
-                beans: ["원두001 (묵직한바디의 강한로스팅)", "원두002 (부드러운산미의 미디엄로스팅)", "디카페인원두"],
-                img: "menu.jpg",
-            },
-            "2F": {
-                drinks: [
-                    "에스프레소", "아메리카노", "스테이트 블라썸 스페셜티",
-                    "카페 라떼", "카푸치노", "아인슈페너", "피스타치오 크림 라떼",
-                    "바닐라 라떼", "카페 모카", "연유 라떼", "바닐라빈 라떼", "오트 라떼",
-
-                    "클래식 루이보스", "글로우 히비스커스", "젠틀 캐모마일", "브리즈 페퍼민트",
-                    "블루밍 그린", "조선 브렉퍼스트", "루이보스 바닐라", "씨 브리즈", "얼 그레이", "그린 루바브",
-
-                    "오미자 히비스커스 티", "진저 레몬 티", "히비스커스 뱅쇼 티",
-                    "유자 민트 티", "허니 자몽 그린티",
-
-                    "복숭아 아이스 티", "유자차", "미숫가루 라떼", "청귤차",
-                    "밀크티", "녹차 라떼", "초콜릿 라떼", "밤 라떼",
-                    "초당옥수수 라떼", "흑임자 크림 라떼", "딸기 피스타치오 라떼",
-
-                    "유자 에이드", "청귤 에이드", "유자 슬러시", "베리믹스 스무디",
-                    "자몽 에이드", "오미자 뱅쇼 슬러시", "애플망고 스무디",
-                    "플레인 요거트 스무디", "복숭아 요거트 스무디"
-                ],
-                coffeeDrinks: [
-                    '에스프레소', '아메리카노', '스테이트 블라썸 스페셜티', '카페 라떼', '카푸치노', '아인슈페너',
-                    '피스타치오 크림 라떼', '바닐라 라떼', '카페 모카', '연유 라떼', '바닐라 빈 라떼', '오트 라떼'
-                ],
-                beans: ["콜롬비아 유기농", "스테이트 블라썸", "디카페인원두"],
-                img: "2F_menu.jpeg",
-            },
-        };
-
-        function normalize(text) {
-            return text.toLowerCase().replace(/\s+/g, '');
-        }
-
+        // 음료명 정제 함수 (온도 단어 제거)
         function cleanDrinkName(text) {
             return text.replace(/(아이스|핫|뜨거운|따뜻한)\s*/gi, '').trim();
         }
 
-        function updateMenuAndBeans(location) {
-            const config = menuMap[location];
-            if (!config) return;
-            drinkList = config.drinks;
-            coffeeDrinks = config.coffeeDrinks;
-
-
-            beanSelect.innerHTML = '<option value="">-- 원두를 선택해주세요 --</option>';
-            config.beans.forEach((bean) => {
-                const option = document.createElement("option");
-                option.value = bean;
-                option.textContent = bean;
-                beanSelect.appendChild(option);
-            });
+        // 정규화 함수 (소문자 + 공백 제거)
+        function normalize(text) {
+            return text.toLowerCase().replace(/\s+/g, '');
         }
 
+        // 백엔드 API에서 메뉴 데이터 가져오기
+        async function loadMenuData(location) {
+            try {
+                const response = await fetch(`/api/menu/${location}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load menu data');
+                }
+                const data = await response.json();
+                
+                // 전역 변수에 저장
+                drinkList = data.drinks;
+                coffeeDrinks = data.coffee_drinks;
+                
+                // 원두 선택 드롭다운 업데이트
+                beanSelect.innerHTML = '<option value="">-- 원두를 선택해주세요 --</option>';
+                data.beans.forEach((bean) => {
+                    const option = document.createElement("option");
+                    option.value = bean;
+                    option.textContent = bean;
+                    beanSelect.appendChild(option);
+                });
+                
+                console.log(`[INFO] ${location} 메뉴 데이터 로드 완료`);
+            } catch (error) {
+                console.error('[ERROR] 메뉴 데이터 로드 실패:', error);
+                alert('메뉴 데이터를 불러오는데 실패했습니다. 새로고침 해주세요.');
+            }
+        }
+
+        // 카페 선택 시 이벤트 리스너
         document.querySelectorAll('input[name="location"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 const selectedLocation = e.target.value;
-                updateMenuAndBeans(selectedLocation);
+                loadMenuData(selectedLocation);
 
                 // 필드 초기화
                 drinkInput.value = "";
@@ -195,9 +168,9 @@
             });
         });
 
-
         let currentFocus = -1;
 
+        // 음료 입력 시 자동완성
         drinkInput.addEventListener('input', () => {
             const raw = drinkInput.value;
             const cleaned = cleanDrinkName(raw);
@@ -218,7 +191,7 @@
                         e.preventDefault();
                         drinkInput.value = match;
                         suggestions.innerHTML = "";
-                        // drinkInput.dispatchEvent(new Event('input'));
+                        
                         // 자동완성 클릭 후 원두 조건 확인
                         const cleaned = cleanDrinkName(match);
                         const normalized = normalize(cleaned);
@@ -246,6 +219,7 @@
             }
         });
 
+        // 키보드 네비게이션
         drinkInput.addEventListener('keydown', (e) => {
             const items = suggestions.querySelectorAll('div');
             if (e.key === 'ArrowDown') {
@@ -265,7 +239,7 @@
                     suggestions.innerHTML = "";
                     e.preventDefault();
 
-                    // ✅ 여기에 추가: 원두 선택 조건 다시 평가
+                    // 원두 선택 조건 다시 평가
                     const cleaned = cleanDrinkName(selected);
                     const normalized = normalize(cleaned);
                     const isCoffee = coffeeDrinks.map(normalize).includes(normalized);
@@ -283,7 +257,6 @@
             }
         });
 
-
         function setActive(items) {
             if (!items || items.length === 0) return;
             items.forEach(item => item.classList.remove('active'));
@@ -293,15 +266,13 @@
             }
         }
 
-
         document.addEventListener('click', (e) => {
             if (!suggestions.contains(e.target) && e.target !== drinkInput) {
                 suggestions.innerHTML = "";
             }
         });
 
-
-
+        // 버튼 throttle 처리
         function throttle(func, limit) {
             let lastCall = 0;
             return function (e) {
@@ -354,6 +325,7 @@
 
             form.submit();
         }, 1000);
+        
         buttons.forEach(button => button.addEventListener('click', throttledSubmit));
 
         // 메뉴판 확대
@@ -363,6 +335,7 @@
                 document.getElementById('img-modal').style.display = 'flex';
             });
         });
+        
         document.getElementById('img-modal').addEventListener('click', () => {
             document.getElementById('img-modal').style.display = 'none';
         });
