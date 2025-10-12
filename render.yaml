@@ -2,8 +2,9 @@ services:
   - type: web
     name: drink-order-app
     runtime: python
-    buildCommand: ""
-    startCommand: python app.py
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.10
