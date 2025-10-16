@@ -26,6 +26,9 @@
 
                     <input type="radio" id="2f" name="location" value="2F" required>
                     <label for="2f" class="cafe-option">&#x1F964; 2층 카페</label>
+
+                    <input type="radio" id="sand" name="location" value="SAND" required>
+                    <label for="sand" class="cafe-option">&#x1F3D6;&#xFE0F; Sand Coffee</label>
                 </div>
 
                 <input type="text" name="name" placeholder="이름 입력" maxlength="10" required>
@@ -85,14 +88,23 @@
 
     <!-- 메뉴판 이미지 -->
     <div style="text-align: center; margin-top: 40px;">
+        <h2 style="margin-bottom: 20px; color: #333;">&#x1F4CB; 메뉴판</h2>
         <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
             <div>
-                <p style="margin-bottom: 8px; color: #333;">지하 1층 메뉴판</p>
+                <p style="margin-bottom: 8px; color: #333; font-weight: bold;">칸틴 (지하 1층)</p>
                 <img src="{{ url_for('static', filename='menu.jpg') }}" alt="지하1층 메뉴판" class="menu-img">
             </div>
             <div>
-                <p style="margin-bottom: 8px; color: #333;">2층 메뉴판</p>
+                <p style="margin-bottom: 8px; color: #333; font-weight: bold;">2층 카페</p>
                 <img src="{{ url_for('static', filename='2F_menu.jpeg') }}" alt="2층 메뉴판" class="menu-img">
+            </div>
+            <div>
+                <p style="margin-bottom: 8px; color: #333; font-weight: bold;">Sand Coffee - Menu 1</p>
+                <img src="{{ url_for('static', filename='sand_coffee_menu1.jpg') }}" alt="Sand Coffee 메뉴판 1" class="menu-img">
+            </div>
+            <div>
+                <p style="margin-bottom: 8px; color: #333; font-weight: bold;">Sand Coffee - Menu 2</p>
+                <img src="{{ url_for('static', filename='sand_coffee_menu2.jpg') }}" alt="Sand Coffee 메뉴판 2" class="menu-img">
             </div>
         </div>
         <p style="color: #555; margin-top: 10px;">※ 메뉴판을 클릭하면 확대됩니다</p>
